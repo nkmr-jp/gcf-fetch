@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
@@ -39,14 +40,7 @@ func init() {
 // See the documentation for more details:
 // https://cloud.google.com/eventarc/docs/cloudevents#pubsub
 type MessagePublishedData struct {
-	Message PubSubMessage
-}
-
-// PubSubMessage is the payload of a Pub/Sub event.
-// See the documentation for more details:
-// https://cloud.google.com/pubsub/docs/reference/rest/v1/PubsubMessage
-type PubSubMessage struct {
-	Data []byte `json:"data"`
+	Message pubsub.Message
 }
 
 func helloPubSub(ctx context.Context, e event.Event) error {
