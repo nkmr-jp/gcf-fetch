@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log"
 
+	"cloud.google.com/go/logging"
 	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // Entry defines a log entry.
@@ -44,7 +46,7 @@ type MessagePublishedData struct {
 }
 
 func helloPubSub(ctx context.Context, e event.Event) error {
-	loggingTest()
+	loggingTest(e)
 	var msg MessagePublishedData
 	if err := e.DataAs(&msg); err != nil {
 		return fmt.Errorf("event.DataAs: %v", err)
@@ -56,10 +58,14 @@ func helloPubSub(ctx context.Context, e event.Event) error {
 	}
 
 	log.Printf("Hello, %s!", name)
+
 	return nil
 }
 
-func loggingTest() {
+func loggingTest(e event.Event) {
+	fmt.Println(json.Marshal(e))
+	spew.Dump(e)
+	fmt.Printf("%+v\n", e)
 	log.Println("This is stderr")
 	fmt.Println("This is stdout")
 
@@ -72,4 +78,23 @@ func loggingTest() {
 		Message:   "This is the default display field.",
 		Component: "arbitrary-property",
 	})
+	l := logging.Entry{
+		// Timestamp:      time.Time{},
+		Severity: logging.Notice,
+		Payload:  "test1",
+		Labels: map[string]string{
+			"key1": "val1",
+			"key2": "val2",
+		},
+		InsertID:       "",
+		HTTPRequest:    nil,
+		Operation:      nil,
+		LogName:        "",
+		Resource:       nil,
+		Trace:          "",
+		SpanID:         "",
+		TraceSampled:   false,
+		SourceLocation: nil,
+	}
+	log.Println(l)
 }
