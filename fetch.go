@@ -11,6 +11,8 @@ import (
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/nkmr-jp/zl"
+	"go.uber.org/zap"
 )
 
 // Entry defines a log entry.
@@ -46,7 +48,7 @@ type MessagePublishedData struct {
 }
 
 func helloPubSub(ctx context.Context, e event.Event) error {
-	loggingTest(e)
+	// loggingTest(e)
 	var msg MessagePublishedData
 	if err := e.DataAs(&msg); err != nil {
 		return fmt.Errorf("event.DataAs: %v", err)
@@ -59,7 +61,23 @@ func helloPubSub(ctx context.Context, e event.Event) error {
 
 	log.Printf("Hello, %s!", name)
 
+	zlTest()
+
 	return nil
+}
+
+func zlTest() {
+	zl.SetLevel(zl.DebugLevel)
+	zl.SetOutput(zl.ConsoleOutput)
+	zl.Init()
+	defer zl.Sync() // flush log buffer
+
+	zl.Info("test message", zap.String("param1", "value1"))
+
+	zl.Info("test message2",
+		zap.String("severity", "info"),
+		zap.String("payload", `{"param1":"val1"}`),
+	)
 }
 
 func loggingTest(e event.Event) {
@@ -78,6 +96,7 @@ func loggingTest(e event.Event) {
 		Message:   "This is the default display field.",
 		Component: "arbitrary-property",
 	})
+	logging.Notice.String()
 	l := logging.Entry{
 		// Timestamp:      time.Time{},
 		Severity: logging.Notice,
