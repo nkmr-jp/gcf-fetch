@@ -4,6 +4,9 @@ FUNC_NAME=fetch
 PROJECT_ID=$(shell gcloud config get-value project)
 PROJECT_NUMBER=$(shell gcloud projects list --filter="project_id:$(PROJECT_ID)" --format='value(project_number)')
 
+start:
+	export FUNCTION_TARGET=HelloPubSub; go run cmd/main.go
+
 init:
 	gcloud projects add-iam-policy-binding $(PROJECT_ID) \
     --member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
