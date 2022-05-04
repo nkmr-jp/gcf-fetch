@@ -1,11 +1,12 @@
 #See: https://cloud.google.com/functions/docs/2nd-gen/getting-started#pubsub
 
 FUNC_NAME=fetch
+ENTRY_POINT=Fetch
 PROJECT_ID=$(shell gcloud config get-value project)
 PROJECT_NUMBER=$(shell gcloud projects list --filter="project_id:$(PROJECT_ID)" --format='value(project_number)')
 
 start:
-	export FUNCTION_TARGET=HelloPubSub; go run cmd/main.go
+	export FUNCTION_TARGET=$(ENTRY_POINT); go run cmd/main.go
 
 init:
 	gcloud projects add-iam-policy-binding $(PROJECT_ID) \
@@ -18,7 +19,7 @@ deploy:
     --gen2 \
     --runtime go116 \
     --trigger-topic $(FUNC_NAME)-topic \
-    --entry-point HelloPubSub \
+    --entry-point $(ENTRY_POINT) \
     --source .
 
 show:

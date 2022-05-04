@@ -2,118 +2,47 @@ package fetch
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
+	"os"
 
-	"cloud.google.com/go/logging"
 	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/nkmr-jp/zl"
-	"go.uber.org/zap"
 )
 
-// Entry defines a log entry.
-type Entry struct {
-	Message  string `json:"message"`
-	Severity string `json:"severity,omitempty"`
-	Trace    string `json:"logging.googleapis.com/trace,omitempty"`
-
-	// Logs Explorer allows filtering and display of this as `jsonPayload.component`.
-	Component string `json:"component,omitempty"`
-}
-
-func (e Entry) String() string {
-	if e.Severity == "" {
-		e.Severity = "INFO"
-	}
-	out, err := json.Marshal(e)
-	if err != nil {
-		log.Printf("json.Marshal: %v", err)
-	}
-	return string(out)
-}
-
-func init() {
-	functions.CloudEvent("HelloPubSub", helloPubSub)
-}
-
-// MessagePublishedData contains the full Pub/Sub message
-// See the documentation for more details:
-// https://cloud.google.com/eventarc/docs/cloudevents#pubsub
+// MessagePublishedData
+// See: https://cloud.google.com/eventarc/docs/cloudevents#pubsub
+// See: https://googleapis.github.io/google-cloudevents/examples/binary/pubsub/MessagePublishedData-complex.json
 type MessagePublishedData struct {
 	Message pubsub.Message
 }
 
-func helloPubSub(ctx context.Context, e event.Event) error {
-	// loggingTest(e)
-	var msg MessagePublishedData
-	if err := e.DataAs(&msg); err != nil {
-		return fmt.Errorf("event.DataAs: %v", err)
-	}
+func init() {
+	initLogger()
+	functions.CloudEvent("Fetch", Run)
+}
 
-	name := string(msg.Message.Data) // Automatically decoded from base64.
+func Run(ctx context.Context, e event.Event) error {
+	zl.Info("RUN_GCF_FETCH")
+	var msg MessagePublishedData
+
+	if err := e.DataAs(&msg); err != nil {
+		zl.Error("DATA_AS_ERROR", err)
+	}
+	name := string(msg.Message.Data)
 	if name == "" {
 		name = "World"
 	}
-
-	log.Printf("Hello, %s!", name)
-
-	zlTest()
+	fmt.Printf("Hello, %s!", name)
 
 	return nil
 }
 
-func zlTest() {
-	zl.SetLevel(zl.DebugLevel)
-	zl.SetOutput(zl.ConsoleOutput)
-	zl.Init()
-	defer zl.Sync() // flush log buffer
-
-	zl.Info("test message", zap.String("param1", "value1"))
-
-	zl.Info("test message2",
-		zap.String("severity", "info"),
-		zap.String("payload", `{"param1":"val1"}`),
-	)
-}
-
-func loggingTest(e event.Event) {
-	fmt.Println(json.Marshal(e))
-	spew.Dump(e)
-	fmt.Printf("%+v\n", e)
-	log.Println("This is stderr")
-	fmt.Println("This is stdout")
-
-	// Structured logging can be used to set severity levels.
-	// See https://cloud.google.com/logging/docs/structured-logging.
-	fmt.Println(`{"message": "This has ERROR severity", "severity": "error"}`)
-
-	log.Println(Entry{
-		Severity:  "NOTICE",
-		Message:   "This is the default display field.",
-		Component: "arbitrary-property",
-	})
-	logging.Notice.String()
-	l := logging.Entry{
-		// Timestamp:      time.Time{},
-		Severity: logging.Notice,
-		Payload:  "test1",
-		Labels: map[string]string{
-			"key1": "val1",
-			"key2": "val2",
-		},
-		InsertID:       "",
-		HTTPRequest:    nil,
-		Operation:      nil,
-		LogName:        "",
-		Resource:       nil,
-		Trace:          "",
-		SpanID:         "",
-		TraceSampled:   false,
-		SourceLocation: nil,
+func initLogger() {
+	if os.Getenv("FUNCTION_TARGET") != "" {
+		zl.SetOutput(zl.ConsoleOutput)
 	}
-	log.Println(l)
+	zl.SetLevel(zl.DebugLevel)
+	zl.Init()
 }
