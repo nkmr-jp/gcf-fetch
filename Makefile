@@ -2,17 +2,23 @@
 
 FUNC_NAME=fetch
 ENTRY_POINT=Fetch
+TOPIC_NAME=$(FUNC_NAME)-topic
+BUCKET_NAME=$(PROJECT_ID)-fetch
+REGION=asia-northeast1
 PROJECT_ID=$(shell gcloud config get-value project)
 PROJECT_NUMBER=$(shell gcloud projects list --filter="project_id:$(PROJECT_ID)" --format='value(project_number)')
 
 start:
-	export FUNCTION_TARGET=$(ENTRY_POINT); go run cmd/main.go
+	export FUNCTION_TARGET=$(ENTRY_POINT) && \
+	export PROJECT_ID=$(PROJECT_ID) && \
+	go run cmd/main.go
 
 init:
 	gcloud projects add-iam-policy-binding $(PROJECT_ID) \
     --member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
     --role=roles/iam.serviceAccountTokenCreator
-	gcloud pubsub topics create $(FUNC_NAME)-topic
+	gcloud pubsub topics create $(TOPIC_NAME)
+	gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)
 
 deploy:
 	gcloud beta functions deploy $(FUNC_NAME) \
