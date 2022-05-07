@@ -1,16 +1,16 @@
 #See: https://cloud.google.com/functions/docs/2nd-gen/getting-started#pubsub
 
-FUNC_NAME=fetch
-ENTRY_POINT=Fetch
-TOPIC_NAME=$(FUNC_NAME)-topic
-BUCKET_NAME=$(PROJECT_ID)-fetch
 REGION=asia-northeast1
 PROJECT_ID=$(shell gcloud config get-value project)
 PROJECT_NUMBER=$(shell gcloud projects list --filter="project_id:$(PROJECT_ID)" --format='value(project_number)')
 
+FUNC_NAME=fetch
+ENTRY_POINT=Fetch
+TOPIC_NAME=$(FUNC_NAME)-topic
+BUCKET_NAME=$(PROJECT_ID)-fetch
+
 start:
 	export FUNCTION_TARGET=$(ENTRY_POINT) && \
-	export PROJECT_ID=$(PROJECT_ID) && \
 	go run cmd/main.go
 
 init:
@@ -31,8 +31,13 @@ deploy:
 show:
 	gcloud beta functions describe $(FUNC_NAME) --gen2
 
+URL=""
 send:
-	gcloud pubsub topics publish $(FUNC_NAME)-topic --message="Test"
+ifeq ($(URL),)
+	$(error "Please specify URL")
+endif
+	gcloud pubsub topics publish $(FUNC_NAME)-topic \
+	--attribute=url=$(URL),bucket=$(BUCKET_NAME)
 
 log:
 	gcloud beta functions logs read $(FUNC_NAME) --gen2 --limit=100

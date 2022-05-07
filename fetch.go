@@ -3,7 +3,6 @@ package fetch
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/nkmr-jp/zl"
+	"go.uber.org/zap"
 )
 
 // MessagePublishedData
@@ -28,27 +28,24 @@ func init() {
 }
 
 func Run(ctx context.Context, e event.Event) error {
-	zl.Info("RUN_GCF_FETCH")
 	var msg MessagePublishedData
-
-	bucketName := os.Getenv("BUCKET_NAME")
-	objectName := os.Getenv("OBJECT_NAME")
+	objectName := "obj_test220507" // ファイル名は後で生成する
 
 	if err := e.DataAs(&msg); err != nil {
 		zl.Error("DATA_AS_ERROR", err)
 	}
-	name := string(msg.Message.Data)
-	if name == "" {
-		name = "World"
-	}
-	fmt.Printf("Hello, %s!", name)
+	url := msg.Message.Attributes["url"]
+	bucket := msg.Message.Attributes["bucket"]
 
 	// TODO: ここでAPIからデータ取る 220507 土 07:39:39
 	b := []byte("Hello world.")
 	buf := bytes.NewBuffer(b)
+	save(ctx, bucket, objectName, buf)
 
-	save(ctx, bucketName, objectName, buf)
-
+	zl.Info("RUN_GCF_FETCH",
+		zap.String("url", url),
+		zap.String("bucket", bucket),
+	)
 	return nil
 }
 
@@ -76,6 +73,7 @@ func save(ctx context.Context, bucketName, objectName string, buf *bytes.Buffer)
 	if err := writer.Close(); err != nil {
 		zl.Error("Writer.Close", err)
 	}
+	zl.Debug("SAVED")
 }
 
 func initLogger() {
