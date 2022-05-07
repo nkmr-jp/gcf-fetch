@@ -26,6 +26,7 @@ deploy:
     --runtime go116 \
     --trigger-topic $(FUNC_NAME)-topic \
     --entry-point $(ENTRY_POINT) \
+    --set-env-vars BUCKET_NAME=$(BUCKET_NAME) \
     --source .
 
 show:

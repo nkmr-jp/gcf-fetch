@@ -30,7 +30,8 @@ func init() {
 
 func Run(ctx context.Context, event event.Event) error {
 	objectName := "test"
-	url, bucket := parse(event)
+	url := parse(event)
+	bucket := os.Getenv("BUCKET_NAME")
 
 	// TODO: ここでAPIからデータ取る 220507 土 07:39:39
 	b := []byte("Hello world.")
@@ -44,20 +45,16 @@ func Run(ctx context.Context, event event.Event) error {
 	return nil
 }
 
-func parse(event event.Event) (url, bucket string) {
+func parse(event event.Event) string {
 	var msg MessagePublishedData
 	if err := event.DataAs(&msg); err != nil {
 		zl.Error("DATA_AS_ERROR", err)
 	}
-	url = msg.Message.Attributes["url"]
+	url := msg.Message.Attributes["url"]
 	if url == "" {
 		zl.Error("ATTRIBUTE_ERROR", fmt.Errorf("url is empty"))
 	}
-	bucket = msg.Message.Attributes["bucket"]
-	if bucket == "" {
-		zl.Error("ATTRIBUTE_ERROR", fmt.Errorf("bucket is empty"))
-	}
-	return url, bucket
+	return url
 }
 
 // See: https://cloud.google.com/storage/docs/streaming#code-samples
