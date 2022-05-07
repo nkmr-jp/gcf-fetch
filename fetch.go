@@ -3,8 +3,10 @@ package fetch
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -30,12 +32,13 @@ func init() {
 
 func Run(ctx context.Context, event event.Event) error {
 	objectName := "test"
-	url, bucket := getVars(event)
+	url := parseEvent(event)
+	bucket := getEnv()
+	buf := get(url)
 
-	// TODO: ここでAPIからデータ取る 220507 土 07:39:39
-	b := []byte("Hello world.")
-	buf := bytes.NewBuffer(b)
-	save(ctx, bucket, objectName, buf)
+	if err := save(ctx, bucket, objectName, buf); err != nil {
+		return err
+	}
 
 	zl.Info("RUN_GCF_FETCH",
 		zap.String("url", url),
@@ -44,28 +47,62 @@ func Run(ctx context.Context, event event.Event) error {
 	return nil
 }
 
-func getVars(event event.Event) (url, bucket string) {
+func get(url string) *bytes.Buffer {
+	res, err := http.Get(url)
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			zl.Error("HTTP_CLOSE_ERROR", err)
+		}
+	}()
+	if err != nil {
+		zl.Error("HTTP_GET_ERROR", err)
+		return nil
+	}
+
+	ret, err := io.ReadAll(res.Body)
+	if err != nil {
+		zl.Error("READ_ERROR", err)
+		return nil
+	}
+
+	var buf *bytes.Buffer
+	if err := json.Indent(buf, ret, "", "  "); err != nil {
+		zl.Error("INDENT_ERROR", err)
+		return nil
+	}
+	return buf
+}
+
+func parseEvent(event event.Event) (url string) {
 	var msg MessagePublishedData
 	if err := event.DataAs(&msg); err != nil {
 		zl.Error("DATA_AS_ERROR", err)
+		return
 	}
 	url = msg.Message.Attributes["url"]
 	if url == "" {
 		zl.Error("ATTRIBUTE_ERROR", fmt.Errorf("url is empty"))
+		return
 	}
+	return url
+}
+
+func getEnv() (bucket string) {
 	bucket = os.Getenv("BUCKET_NAME")
 	if bucket == "" {
 		zl.Error("GETENV_ERROR", fmt.Errorf("bucket is empty"))
+		return ""
 	}
-	return url, bucket
+	return bucket
 }
 
 // See: https://cloud.google.com/storage/docs/streaming#code-samples
-func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) {
+func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
 	// create client
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		zl.Error("NEW_CLIENT_ERROR", err)
+		return err
 	}
 	defer func(client *storage.Client) {
 		err := client.Close()
@@ -83,17 +120,20 @@ func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) {
 	writer.ChunkSize = 0
 	if _, err := io.Copy(writer, buf); err != nil {
 		zl.Error("IO_COPY_ERROR", err)
+		return err
 	}
 
 	// writer close
 	if err := writer.Close(); err != nil {
 		zl.Error("WRITER_CLOSE_ERROR", err)
+		return err
 	}
 
 	zl.Debug("SAVED",
 		zap.String("bucket", bucket),
 		zap.String("object", object),
 	)
+	return nil
 }
 
 func initLogger() {
