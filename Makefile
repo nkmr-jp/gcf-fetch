@@ -37,7 +37,7 @@ ifeq ($(URL),)
 	$(error "Please specify URL")
 endif
 	gcloud pubsub topics publish $(FUNC_NAME)-topic \
-	--attribute=url=$(URL),bucket=$(BUCKET_NAME)
+	--attribute=url=$(URL)
 
 log:
 	gcloud beta functions logs read $(FUNC_NAME) --gen2 --limit=100

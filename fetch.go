@@ -3,6 +3,7 @@ package fetch
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -27,15 +28,9 @@ func init() {
 	functions.CloudEvent("Fetch", Run)
 }
 
-func Run(ctx context.Context, e event.Event) error {
-	var msg MessagePublishedData
-	objectName := "obj_test220507" // ファイル名は後で生成する
-
-	if err := e.DataAs(&msg); err != nil {
-		zl.Error("DATA_AS_ERROR", err)
-	}
-	url := msg.Message.Attributes["url"]
-	bucket := msg.Message.Attributes["bucket"]
+func Run(ctx context.Context, event event.Event) error {
+	objectName := "test"
+	url, bucket := parse(event)
 
 	// TODO: ここでAPIからデータ取る 220507 土 07:39:39
 	b := []byte("Hello world.")
@@ -49,37 +44,63 @@ func Run(ctx context.Context, e event.Event) error {
 	return nil
 }
 
+func parse(event event.Event) (url, bucket string) {
+	var msg MessagePublishedData
+	if err := event.DataAs(&msg); err != nil {
+		zl.Error("DATA_AS_ERROR", err)
+	}
+	url = msg.Message.Attributes["url"]
+	if url == "" {
+		zl.Error("ATTRIBUTE_ERROR", fmt.Errorf("url is empty"))
+	}
+	bucket = msg.Message.Attributes["bucket"]
+	if bucket == "" {
+		zl.Error("ATTRIBUTE_ERROR", fmt.Errorf("bucket is empty"))
+	}
+	return url, bucket
+}
+
 // See: https://cloud.google.com/storage/docs/streaming#code-samples
-func save(ctx context.Context, bucketName, objectName string, buf *bytes.Buffer) {
-	// Client 作成
+func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) {
+	// create client
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		zl.Error("storage.NewClient", err)
+		zl.Error("NEW_CLIENT_ERROR", err)
 	}
-	defer client.Close()
+	defer func(client *storage.Client) {
+		err := client.Close()
+		if err != nil {
+			zl.Error("CLIENT_CLOSE_ERROR", err)
+		}
+	}(client)
 
-	// タイムアウト設定
+	// timeout setting
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
 
-	// 書き込み
-	writer := client.Bucket(bucketName).Object(objectName).NewWriter(ctx)
+	// write buffer
+	writer := client.Bucket(bucket).Object(object).NewWriter(ctx)
 	writer.ChunkSize = 0
 	if _, err := io.Copy(writer, buf); err != nil {
-		zl.Error("io.Copy", err)
+		zl.Error("IO_COPY_ERROR", err)
 	}
 
-	// 書き込み終了
+	// writer close
 	if err := writer.Close(); err != nil {
-		zl.Error("Writer.Close", err)
+		zl.Error("WRITER_CLOSE_ERROR", err)
 	}
-	zl.Debug("SAVED")
+
+	zl.Debug("SAVED",
+		zap.String("bucket", bucket),
+		zap.String("object", object),
+	)
 }
 
 func initLogger() {
 	if os.Getenv("FUNCTION_TARGET") != "" {
 		zl.SetOutput(zl.ConsoleOutput)
 	}
+	zl.SetOmitKeys(zl.PIDKey, zl.HostnameKey)
 	zl.SetLevel(zl.DebugLevel)
 	zl.Init()
 }
