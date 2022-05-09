@@ -34,7 +34,6 @@ func init() {
 func Run(ctx context.Context, event event.Event) error {
 	defer zl.Sync() // Flush log file buffer. for debug in mac local.
 
-	// objectName := "test"
 	bucket := getEnv()
 	url := parseEvent(event)
 	gcsPath := parseURL(url)
@@ -47,6 +46,7 @@ func Run(ctx context.Context, event event.Event) error {
 	zl.Info("RUN_GCF_FETCH",
 		zap.String("url", url),
 		zap.String("bucket", bucket),
+		zap.String("object", gcsPath),
 	)
 	return nil
 }
@@ -83,7 +83,7 @@ func parseURL(s string) string {
 	if err != nil {
 		zl.Error("URL_PARSE_ERROR", err)
 	}
-	return url.Host + "/" + url.Path
+	return url.Host + url.Path
 }
 
 func parseEvent(event event.Event) (url string) {

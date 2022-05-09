@@ -8,6 +8,7 @@ FUNC_NAME=fetch
 ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
 BUCKET_NAME=$(PROJECT_ID)-fetch
+TEST_BUCKET_NAME=$(PROJECT_ID)-fetch-test
 
 start:
 	export FUNCTION_TARGET=$(ENTRY_POINT) && \
@@ -19,6 +20,10 @@ init:
     --role=roles/iam.serviceAccountTokenCreator
 	gcloud pubsub topics create $(TOPIC_NAME)
 	gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)
+	gsutil mb -c regional -l $(REGION) gs://$(TEST_BUCKET_NAME)
+
+test:
+	export BUCKET_NAME=$(TEST_BUCKET_NAME) && go test -v
 
 deploy:
 	gcloud beta functions deploy $(FUNC_NAME) \

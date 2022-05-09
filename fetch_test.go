@@ -2,7 +2,6 @@ package fetch_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"cloud.google.com/go/pubsub"
@@ -31,7 +30,6 @@ func NewTestFetch() *TestFetch {
 }
 
 func (f *TestFetch) setup(t *testing.T) {
-	os.Setenv("BUCKET_NAME", "gcf-fetch-test")
 	msg := fetch.MessagePublishedData{
 		Message: pubsub.Message{
 			Attributes: map[string]string{
