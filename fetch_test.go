@@ -2,6 +2,7 @@ package fetch_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"cloud.google.com/go/pubsub"
@@ -10,21 +11,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFetch(t *testing.T) {
-	msg := fetch.MessagePublishedData{
-		Message: pubsub.Message{
-			Data: []byte("test message"),
-		},
-	}
+func TestRun(t *testing.T) {
+	test := NewTestFetch()
+	test.setup(t)
 
-	e := event.New()
-	e.SetDataContentType("application/json")
-	if err := e.SetData(e.DataContentType(), msg); err != nil {
-		assert.Fail(t, err.Error())
-	}
 	// Send message
-	if err := fetch.Run(context.Background(), e); err != nil {
+	if err := fetch.Run(context.Background(), test.event); err != nil {
 		assert.Fail(t, err.Error())
 	}
 	assert.Equal(t, "Something", "Something")
+}
+
+type TestFetch struct {
+	event event.Event
+}
+
+func NewTestFetch() *TestFetch {
+	return &TestFetch{}
+}
+
+func (f *TestFetch) setup(t *testing.T) {
+	os.Setenv("BUCKET_NAME", "gcf-fetch-test")
+	msg := fetch.MessagePublishedData{
+		Message: pubsub.Message{
+			Attributes: map[string]string{
+				"url": "https://api.github.com/users/defunkt",
+			},
+		},
+	}
+	f.event = event.New()
+	f.event.SetDataContentType("application/json")
+	if err := f.event.SetData(f.event.DataContentType(), msg); err != nil {
+		assert.Fail(t, err.Error())
+	}
 }

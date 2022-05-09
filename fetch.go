@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	nu "net/url"
 	"os"
 	"time"
 
@@ -31,12 +32,15 @@ func init() {
 }
 
 func Run(ctx context.Context, event event.Event) error {
-	objectName := "test"
-	url := parseEvent(event)
+	defer zl.Sync() // Flush log file buffer. for debug in mac local.
+
+	// objectName := "test"
 	bucket := getEnv()
+	url := parseEvent(event)
+	gcsPath := parseURL(url)
 	buf := get(url)
 
-	if err := save(ctx, bucket, objectName, buf); err != nil {
+	if err := save(ctx, bucket, gcsPath, buf); err != nil {
 		return err
 	}
 
@@ -61,16 +65,25 @@ func get(url string) *bytes.Buffer {
 
 	ret, err := io.ReadAll(res.Body)
 	if err != nil {
-		zl.Error("READ_ERROR", err)
+		zl.Error("READ_BODY_ERROR", err)
 		return nil
 	}
 
-	var buf *bytes.Buffer
-	if err := json.Indent(buf, ret, "", "  "); err != nil {
+	var buf bytes.Buffer
+	if err := json.Indent(&buf, ret, "", "  "); err != nil {
 		zl.Error("INDENT_ERROR", err)
 		return nil
 	}
-	return buf
+
+	return &buf
+}
+
+func parseURL(s string) string {
+	url, err := nu.Parse(s)
+	if err != nil {
+		zl.Error("URL_PARSE_ERROR", err)
+	}
+	return url.Host + "/" + url.Path
 }
 
 func parseEvent(event event.Event) (url string) {
@@ -124,23 +137,23 @@ func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
 	}
 
 	// writer close
-	if err := writer.Close(); err != nil {
-		zl.Error("WRITER_CLOSE_ERROR", err)
-		return err
-	}
-
-	zl.Debug("SAVED",
+	fields := []zap.Field{
 		zap.String("bucket", bucket),
 		zap.String("object", object),
-	)
+	}
+	if err := writer.Close(); err != nil {
+		zl.Error("WRITER_CLOSE_ERROR", err, fields...)
+		return err
+	}
+	zl.Debug("SAVED", fields...)
 	return nil
 }
 
 func initLogger() {
 	if os.Getenv("FUNCTION_TARGET") != "" {
 		zl.SetOutput(zl.ConsoleOutput)
+		zl.SetOmitKeys(zl.PIDKey, zl.HostnameKey)
 	}
-	zl.SetOmitKeys(zl.PIDKey, zl.HostnameKey)
 	zl.SetLevel(zl.DebugLevel)
 	zl.Init()
 }
