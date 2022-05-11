@@ -43,7 +43,7 @@ ifeq ($(URL),)
 	$(error "Please specify URL")
 endif
 	gcloud pubsub topics publish $(FUNC_NAME)-topic \
-	--attribute=url=$(URL)
+	--message=$(URL)
 
 log:
 	gcloud beta functions logs read $(FUNC_NAME) --gen2 --limit=100
@@ -51,3 +51,4 @@ log:
 open:
 	open https://console.cloud.google.com/functions/details/asia-northeast1/$(FUNC_NAME)?env=gen2
 	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
+	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)

@@ -32,9 +32,7 @@ func NewTestFetch() *TestFetch {
 func (f *TestFetch) setup(t *testing.T) {
 	msg := fetch.MessagePublishedData{
 		Message: pubsub.Message{
-			Attributes: map[string]string{
-				"url": "https://api.github.com/users/defunkt",
-			},
+			Data: []byte("https://api.github.com/users/defunkt"),
 		},
 	}
 	f.event = event.New()

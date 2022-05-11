@@ -86,18 +86,12 @@ func parseURL(s string) string {
 	return url.Host + url.Path
 }
 
-func parseEvent(event event.Event) (url string) {
+func parseEvent(event event.Event) string {
 	var msg MessagePublishedData
 	if err := event.DataAs(&msg); err != nil {
 		zl.Error("DATA_AS_ERROR", err)
-		return
 	}
-	url = msg.Message.Attributes["url"]
-	if url == "" {
-		zl.Error("ATTRIBUTE_ERROR", fmt.Errorf("url is empty"))
-		return
-	}
-	return url
+	return string(msg.Message.Data)
 }
 
 func getEnv() (bucket string) {
