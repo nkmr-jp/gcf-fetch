@@ -19,8 +19,9 @@ init:
     --member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
     --role=roles/iam.serviceAccountTokenCreator
 	gcloud pubsub topics create $(TOPIC_NAME)
-	gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)
-	gsutil mb -c regional -l $(REGION) gs://$(TEST_BUCKET_NAME)
+	gsutil mb -b on -p $(PROJECT_ID) -c regional -l $(REGION) gs://$(BUCKET_NAME)
+	gsutil mb -b on -c regional -l $(REGION) gs://$(TEST_BUCKET_NAME)
+#	gsutil versioning set on gs://$(TERRAFORM_BUCKET)
 
 test:
 	export BUCKET_NAME=$(TEST_BUCKET_NAME) && go test -v
