@@ -8,19 +8,31 @@ FUNC_NAME=fetch
 ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
 BUCKET_NAME=$(PROJECT_ID)-fetch
-TEST_BUCKET_NAME=$(PROJECT_ID)-fetch-test
 
 start:
 	export FUNCTION_TARGET=$(ENTRY_POINT) && \
 	go run cmd/main.go
 
 init:
-	gcloud projects add-iam-policy-binding $(PROJECT_ID) \
+	@echo
+	@echo "---- add iam policy binding. ----"
+	-gcloud projects add-iam-policy-binding $(PROJECT_ID) \
     --member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
     --role=roles/iam.serviceAccountTokenCreator
-	gcloud pubsub topics create $(TOPIC_NAME)
-	gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)
-	gsutil mb -c regional -l $(REGION) gs://$(TEST_BUCKET_NAME)
+	@echo
+	@echo "---- create pubusub topic. ----"
+	-gcloud pubsub topics create $(TOPIC_NAME)
+	@echo
+	@echo "---- create bucket and set versioning. ----"
+	-gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)
+	-gsutil versioning set on gs://$(BUCKET_NAME)
+	@echo
+	@echo "---- create bucket and set versioning, for test. ----"
+	-gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)-test
+	-gsutil versioning set on gs://$(BUCKET_NAME)-test
+	@echo
+	@echo "---- check resources in google cloud console. ----"
+	make open
 
 test:
 	export BUCKET_NAME=$(TEST_BUCKET_NAME) && go test -v
@@ -49,6 +61,7 @@ log:
 	gcloud beta functions logs read $(FUNC_NAME) --gen2 --limit=100
 
 open:
-	open https://console.cloud.google.com/functions/details/asia-northeast1/$(FUNC_NAME)?env=gen2
+	open https://console.cloud.google.com/iam-admin/serviceaccounts?project=$(PROJECT_ID)
 	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
 	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
+	open https://console.cloud.google.com/functions/details/$(REGION)/$(FUNC_NAME)?env=gen2
