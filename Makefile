@@ -1,4 +1,6 @@
-#See: https://cloud.google.com/functions/docs/2nd-gen/getting-started#pubsub
+# See:
+# https://cloud.google.com/functions/docs/2nd-gen/getting-started#pubsub
+# https://cloud.google.com/storage/docs/lifecycle-configurations#delete-objects-json
 
 REGION=asia-northeast1
 PROJECT_ID=$(shell gcloud config get-value project)
@@ -26,10 +28,12 @@ init:
 	@echo "---- create bucket and set versioning. ----"
 	-gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)
 	-gsutil versioning set on gs://$(BUCKET_NAME)
+	-gsutil lifecycle set ./lifecycle.json gs://$(BUCKET_NAME)
 	@echo
 	@echo "---- create bucket and set versioning, for test. ----"
 	-gsutil mb -c regional -l $(REGION) gs://$(BUCKET_NAME)-test
 	-gsutil versioning set on gs://$(BUCKET_NAME)-test
+	-gsutil lifecycle set ./lifecycle.json gs://$(BUCKET_NAME)-test
 	@echo
 	@echo "---- check resources in google cloud console. ----"
 	make open
