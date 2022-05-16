@@ -7,9 +7,7 @@ require (
 	cloud.google.com/go/storage v1.10.0
 	github.com/GoogleCloudPlatform/functions-framework-go v1.5.3
 	github.com/cloudevents/sdk-go/v2 v2.6.1
-	github.com/davecgh/go-spew v1.1.1
-	github.com/k0kubun/pp/v3 v3.1.0 // indirect
-	github.com/nkmr-jp/zl v0.1.1-0.20220430214813-b1c66a2f0d4c
+	github.com/nkmr-jp/zl v0.1.1-0.20220514044731-8a86056d9f7c
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.2 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
