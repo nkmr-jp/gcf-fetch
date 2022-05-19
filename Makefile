@@ -19,8 +19,8 @@ init:
 	@echo
 	@echo "---- add iam policy binding. ----"
 	-gcloud projects add-iam-policy-binding $(PROJECT_ID) \
-    --member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
-    --role=roles/iam.serviceAccountTokenCreator
+	--member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
+	--role=roles/iam.serviceAccountTokenCreator
 	@echo
 	@echo "---- create pubusub topic. ----"
 	-gcloud pubsub topics create $(TOPIC_NAME)
@@ -43,12 +43,12 @@ test:
 
 deploy:
 	gcloud beta functions deploy $(FUNC_NAME) \
-    --gen2 \
-    --runtime go116 \
-    --trigger-topic $(FUNC_NAME)-topic \
-    --entry-point $(ENTRY_POINT) \
-    --set-env-vars BUCKET_NAME=$(BUCKET_NAME) \
-    --source .
+	--gen2 \
+	--runtime go116 \
+	--trigger-topic $(FUNC_NAME)-topic \
+	--entry-point $(ENTRY_POINT) \
+	--set-env-vars BUCKET_NAME=$(BUCKET_NAME) \
+	--source .
 
 show:
 	gcloud beta functions describe $(FUNC_NAME) --gen2
