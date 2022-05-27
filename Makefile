@@ -11,10 +11,6 @@ ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
 BUCKET_NAME=$(PROJECT_ID)-fetch
 
-start:
-	export FUNCTION_TARGET=$(ENTRY_POINT) && \
-	go run cmd/main.go
-
 init:
 	@echo
 	@echo "---- add iam policy binding. ----"
@@ -39,7 +35,7 @@ init:
 	make open
 
 test:
-	export BUCKET_NAME=$(TEST_BUCKET_NAME) && go test -v
+	export BUCKET_NAME=$(BUCKET_NAME)-test && go test -v
 
 deploy:
 	gcloud beta functions deploy $(FUNC_NAME) \

@@ -4,10 +4,10 @@
       {
         "action": {
           "type": "SetStorageClass",
-          "storageClass": "NEARLINE"
+          "storageClass": "COLDLINE"
         },
         "condition": {
-          "age": 1,
+          "age": 7,
           "matchesStorageClass": ["REGIONAL", "STANDARD"]
         }
       },
@@ -17,8 +17,8 @@
           "storageClass": "COLDLINE"
         },
         "condition": {
-          "age": 2,
-          "matchesStorageClass": ["NEARLINE"]
+          "age": 30,
+          "matchesStorageClass": ["ARCHIVE"]
         }
       }
     ]
