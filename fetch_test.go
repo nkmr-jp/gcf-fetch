@@ -2,18 +2,18 @@ package fetch_test
 
 import (
 	"context"
+	"encoding/base64"
 	"os"
 	"testing"
 
-	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/storage"
 	"github.com/cloudevents/sdk-go/v2/event"
 	fetch "github.com/nkmr-jp/gcf-fetch"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/pubsub/v1"
 )
 
 func TestRun(t *testing.T) {
-	// Prepare for test
 	test := NewTestFetch()
 	test.setup(t)
 	objPath := "api.github.com/users/github"
@@ -53,8 +53,8 @@ func NewTestFetch() *TestFetch {
 
 func (f *TestFetch) setup(t *testing.T) {
 	msg := fetch.MessagePublishedData{
-		Message: pubsub.Message{
-			Data: []byte("https://api.github.com/users/github"),
+		Message: pubsub.PubsubMessage{
+			Data: base64.StdEncoding.EncodeToString([]byte("https://api.github.com/users/github")),
 		},
 	}
 	f.event = event.New()

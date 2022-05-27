@@ -3,6 +3,7 @@ package fetch
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,19 +12,19 @@ import (
 	"os"
 	"time"
 
-	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/nkmr-jp/zl"
 	"go.uber.org/zap"
+	"google.golang.org/api/pubsub/v1"
 )
 
 // MessagePublishedData
 // See: https://cloud.google.com/eventarc/docs/cloudevents#pubsub
 // See: https://googleapis.github.io/google-cloudevents/examples/binary/pubsub/MessagePublishedData-complex.json
 type MessagePublishedData struct {
-	Message pubsub.Message
+	Message pubsub.PubsubMessage
 }
 
 func init() {
@@ -87,11 +88,21 @@ func parseURL(s string) string {
 }
 
 func parseEvent(event event.Event) string {
-	var msg MessagePublishedData
-	if err := event.DataAs(&msg); err != nil {
+	var data MessagePublishedData
+	if err := event.DataAs(&data); err != nil {
 		zl.Error("DATA_AS_ERROR", err)
 	}
-	return string(msg.Message.Data)
+	zl.Info("CLOUD_EVENT_RECEIVED",
+		zap.String("cloudEventContext", event.Context.String()),
+		zap.Any("cloudEventData", data),
+	)
+	msgData, err := base64.StdEncoding.DecodeString(data.Message.Data)
+	if err != nil {
+		zl.Error("DECODE_ERROR", err)
+	}
+	zl.Dump(string(msgData))
+
+	return string(msgData)
 }
 
 func getEnv() (bucket string) {
