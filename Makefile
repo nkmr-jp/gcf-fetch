@@ -10,6 +10,7 @@ FUNC_NAME=fetch
 ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
 BUCKET_NAME=$(PROJECT_ID)-fetch
+VERSION=$(shell git rev-parse --short HEAD)
 
 init:
 	@echo
@@ -43,7 +44,7 @@ deploy:
 	--runtime go116 \
 	--trigger-topic $(FUNC_NAME)-topic \
 	--entry-point $(ENTRY_POINT) \
-	--set-env-vars BUCKET_NAME=$(BUCKET_NAME) \
+	--set-env-vars BUCKET_NAME=$(BUCKET_NAME),VERSION=$(VERSION) \
 	--source .
 
 show:

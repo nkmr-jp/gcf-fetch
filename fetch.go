@@ -140,6 +140,12 @@ func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
 }
 
 func initLogger() {
+	urlFormat := "https://github.com/nkmr-jp/gcf-fetch/blob/%s"
+	srcRootDir := "/workspace/serverless_function_source_code"
+	version := os.Getenv("VERSION")
+	zl.SetVersion(version)
+	zl.SetRepositoryCallerEncoder(urlFormat, version, srcRootDir)
+
 	if os.Getenv("FUNCTION_TARGET") != "" {
 		zl.SetOutput(zl.ConsoleOutput)
 		zl.SetOmitKeys(zl.PIDKey, zl.HostnameKey)
