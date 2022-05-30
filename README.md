@@ -23,7 +23,7 @@ If you haven't already, install and set up the [Cloud SDK](https://cloud.google.
 
 # Usage
 
-Create various GCP resources
+Create GCP resources
 ```sh
 make init
 ```
