@@ -43,6 +43,10 @@ Send pub/sub event
 make send URL="https://api.github.com/users/github"
 ```
 
+Open resources in console
+```sh
+make open
+```
 
 
 # See
