@@ -14,11 +14,11 @@
       {
         "action": {
           "type": "SetStorageClass",
-          "storageClass": "COLDLINE"
+          "storageClass": "ARCHIVE"
         },
         "condition": {
           "age": 30,
-          "matchesStorageClass": ["ARCHIVE"]
+          "matchesStorageClass": ["COLDLINE"]
         }
       }
     ]
