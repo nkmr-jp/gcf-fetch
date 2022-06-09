@@ -5,7 +5,7 @@ Google Cloud Functions Gen2 Golang environment is supported.
 
 # Features
 
-- Fetch data is stored in a path based on the API's URL, like [ghq](https://github.com/x-motemen/ghq).
+- Fetch data is stored in a path based on the API's URL. ( like [ghq](https://github.com/x-motemen/ghq) )
   - Therefore, even if you get various API data, you do not need to manage the bucket's path.
 - Execute Cloud Pub/Sub as a trigger.
   - Therefore, periodic execution is also possible with [Cloud Scheduler](https://cloud.google.com/scheduler).
