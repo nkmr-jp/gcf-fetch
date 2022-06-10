@@ -8,7 +8,7 @@ require (
 	github.com/GoogleCloudPlatform/functions-framework-go v1.5.3
 	github.com/cloudevents/sdk-go/v2 v2.6.1
 	github.com/googleapis/google-cloudevents-go v0.2.1
-	github.com/nkmr-jp/zl v0.1.1-0.20220521094546-ef5c69798947
+	github.com/nkmr-jp/zl v1.0.1
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.9.2 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
