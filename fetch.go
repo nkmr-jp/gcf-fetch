@@ -39,8 +39,12 @@ func Run(ctx context.Context, event event.Event) error {
 	return nil
 }
 
-func get(url string) *bytes.Buffer {
-	res, err := http.Get(url)
+func get(urlStr string) *bytes.Buffer {
+	u, err := nu.Parse(urlStr)
+	if err != nil {
+		return nil
+	}
+	res, err := http.Get(u.String())
 	defer func() {
 		if err := res.Body.Close(); err != nil {
 			zl.Error("HTTP_CLOSE_ERROR", err)
@@ -117,7 +121,10 @@ func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
 	// timeout setting
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
 	defer cancel()
+	return writeBuf(ctx, client, bucket, object, buf)
+}
 
+func writeBuf(ctx context.Context, client *storage.Client, bucket, object string, buf *bytes.Buffer) error {
 	// write buffer
 	writer := client.Bucket(bucket).Object(object).NewWriter(ctx)
 	writer.ChunkSize = 0
