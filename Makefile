@@ -66,3 +66,6 @@ open:
 	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
 	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
 	open https://console.cloud.google.com/functions/details/$(REGION)/$(FUNC_NAME)?env=gen2
+
+lint:
+	golangci-lint run --fix

@@ -1,3 +1,4 @@
+//
 package fetch_test
 
 import (
@@ -22,7 +23,7 @@ func TestRun(t *testing.T) {
 	// Get generation before send pubsub message.
 	var preGeneration int64
 	rc, err := client.Bucket(os.Getenv("BUCKET_NAME")).Object(objPath).NewReader(ctx)
-	defer rc.Close()
+	defer rc.Close() // nolint
 	if err == nil {
 		preGeneration = rc.Attrs.Generation
 	}
@@ -34,7 +35,7 @@ func TestRun(t *testing.T) {
 
 	// Get generation after send pubsub message.
 	rc2, err := client.Bucket(os.Getenv("BUCKET_NAME")).Object(objPath).NewReader(ctx)
-	defer rc.Close()
+	defer rc.Close() // nolint
 	if err != nil {
 		assert.Fail(t, err.Error())
 	}
