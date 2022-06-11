@@ -48,6 +48,15 @@ Open resources in console
 make open
 ```
 
+# Use Case
+
+Historical data can be created by periodically executing data acquisition from various APIs. <br>
+Data stored in GCS can be loaded into BigQuery and other applications for data analysis and machine learning.
+
+Of course, it can also be used in applications.
+
+List of public APIs.<br>
+[GitHub - public-apis/public-apis: A collective list of free APIs](https://github.com/public-apis/public-apis)
 
 # See
 - https://github.com/GoogleCloudPlatform/golang-samples/tree/main/functions/functionsv2
