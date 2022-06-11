@@ -50,9 +50,7 @@ make open
 
 # Use Case
 
-Historical data can be created by periodically executing data acquisition from various APIs. <br>
-Data stored in GCS can be loaded into BigQuery and other applications for data analysis and machine learning.
-
+The api data saved in GCS can be used for various purposes such as data analysis and machine learning by loading it into BigQuery.<br>
 Of course, it can also be used in applications.
 
 List of public APIs.<br>
