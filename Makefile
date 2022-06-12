@@ -10,7 +10,8 @@ FUNC_NAME=fetch
 ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
 BUCKET_NAME=$(PROJECT_ID)-fetch
-VERSION=$(shell git rev-parse --short HEAD)
+# VERSION=$(shell git rev-parse --short HEAD)
+VERSION=$(shell git describe --abbrev=0 --tags)
 
 init:
 	@echo
@@ -33,7 +34,9 @@ init:
 	-gsutil lifecycle set ./lifecycle.json gs://$(BUCKET_NAME)-test
 	@echo
 	@echo "---- check resources in google cloud console. ----"
-	make open
+	open https://console.cloud.google.com/iam-admin/serviceaccounts?project=$(PROJECT_ID)
+	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
+	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
 
 test:
 	export BUCKET_NAME=$(BUCKET_NAME)-test && go test -v
@@ -62,10 +65,9 @@ log:
 	gcloud beta functions logs read $(FUNC_NAME) --gen2 --limit=100
 
 open:
-	open https://console.cloud.google.com/iam-admin/serviceaccounts?project=$(PROJECT_ID)
-	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
 	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
 	open https://console.cloud.google.com/functions/details/$(REGION)/$(FUNC_NAME)?env=gen2
+	open "https://console.cloud.google.com/logs/query;query=%2528resource.type%20%3D%20%22cloud_function%22%0Aresource.labels.function_name%20%3D%20%22$(FUNC_NAME)%22%0Aresource.labels.region%20%3D%20%22$(REGION)%22%2529%0A%20OR%20%0A%2528resource.type%20%3D%20%22cloud_run_revision%22%0Aresource.labels.service_name%20%3D%20%22$(FUNC_NAME)%22%0Aresource.labels.location%20%3D%20%22$(REGION)%22%2529%0A%20severity%3E%3DDEFAULT;?project=$(PROJECT_ID)"
 
 lint:
 	golangci-lint run --fix
