@@ -1,7 +1,10 @@
 # gcf-fetch
 
-Cloud Functions that fetch data from public APIs and store it in Google Cloud Storage.<br>
-[Google Cloud Functions Gen2](https://cloud.google.com/functions/docs/2nd-gen/overview) Golang environment is supported.
+Cloud Functions that fetch data from public APIs and store it in Google Cloud Storage.
+
+- Runtime: Go 1.16
+- Gen: [Cloud Functions (2nd gen)](https://cloud.google.com/functions/docs/2nd-gen/overview)
+
 
 # Features
 
