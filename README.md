@@ -17,10 +17,10 @@ Cloud Functions that fetch data from public APIs and store it in Google Cloud St
   - The storage class is set to change from Standard to Coldline after 7 days from object creation and from Coldline to Archive after 30 days (easy to change).
 - [zl](https://github.com/nkmr-jp/zl) (zap based logger) for logging by severity level.
   - Logs in JSON format so it can check the element contents in detail with [Cloud Logging](https://cloud.google.com/logging).
-  - You can also check the contents of CloudEvents triggered by Functions in the log.
+  - You can also check the [CloudEvent](https://cloudevents.io/) that triggered Functions.
   
 <details>
-<summary>Cloud Logging's log example</summary>
+<summary>Cloud Logging's log example (CloudEvent)</summary>
 
 ```json
 
