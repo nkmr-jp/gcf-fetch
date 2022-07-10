@@ -15,11 +15,6 @@ VERSION=$(shell git describe --abbrev=0 --tags)
 
 init:
 	@echo
-	@echo "---- add iam policy binding. ----"
-	-gcloud projects add-iam-policy-binding $(PROJECT_ID) \
-	--member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
-	--role=roles/iam.serviceAccountTokenCreator
-	@echo
 	@echo "---- create pubusub topic. ----"
 	-gcloud pubsub topics create $(TOPIC_NAME)
 	@echo
@@ -37,6 +32,19 @@ init:
 	open https://console.cloud.google.com/iam-admin/serviceaccounts?project=$(PROJECT_ID)
 	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
 	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
+
+
+# See: https://cloud.google.com/pubsub/docs/push
+# > If your project was created on or before April 8, 2021,
+# > you must grant the roles/iam.serviceAccountTokenCreator role to
+# > the Google-managed service account service-{PROJECT_NUMBER}@gcp-sa-pubsub.iam.gserviceaccount.com
+# > on the project in order to allow Pub/Sub to create tokens.
+add-iam-policy-binding:
+	@echo
+	@echo "---- add iam policy binding. ----"
+	-gcloud projects add-iam-policy-binding $(PROJECT_ID) \
+	--member=serviceAccount:service-$(PROJECT_NUMBER)@gcp-sa-pubsub.iam.gserviceaccount.com \
+	--role=roles/iam.serviceAccountTokenCreator
 
 test:
 	export BUCKET_NAME=$(BUCKET_NAME)-test && go test -v
