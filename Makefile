@@ -66,7 +66,9 @@ send:
 ifeq ($(URL),)
 	$(error "Please specify URL")
 endif
-	gcloud pubsub topics publish $(FUNC_NAME)-topic \
+	gcloud pubsub topics publish \
+	$(FUNC_NAME)-topic \
+	--project $(PROJECT_ID) \
 	--message=$(URL)
 
 log:
