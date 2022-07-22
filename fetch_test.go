@@ -10,7 +10,9 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/googleapis/google-cloudevents-go/cloud/pubsub/v1"
 	fetch "github.com/nkmr-jp/gcf-fetch"
+	"github.com/nkmr-jp/zl"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/iterator"
 )
 
 func TestRun(t *testing.T) {
@@ -18,8 +20,9 @@ func TestRun(t *testing.T) {
 
 	t.Run("single url", func(t *testing.T) {
 		objPath := "api.github.com/users/github"
-		pubsubData := "https://" + objPath
+		pubsubData := "https://api.github.com/users/github"
 		ctx := context.Background()
+		test.deleteObjects(ctx, "api.github.com")
 
 		// Send pubsub message1
 		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
@@ -32,16 +35,34 @@ func TestRun(t *testing.T) {
 			assert.Fail(t, err.Error())
 		}
 		reader2 := test.getObject(ctx, objPath)
-
 		// Get generation after send pubsub message.
 		assert.NotEqual(t, reader1.Attrs.Generation, reader2.Attrs.Generation)
 	})
 
 	t.Run("multi url", func(t *testing.T) {
 		t.Skip()
-		// if got := add(tt.args.a, tt.args.b); got != tt.want {
-		// 	t.Errorf("add() = %v, want %v", got, tt.want)
-		// }
+		objPath := `
+api.github.com/users/github
+api.github.com/users/github/followers
+`
+		pubsubData := `
+https://api.github.com/users/github
+https://api.github.com/users/github/followers
+`
+		ctx := context.Background()
+
+		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
+			assert.Fail(t, err.Error())
+		}
+		reader1 := test.getObject(ctx, objPath)
+
+		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
+			assert.Fail(t, err.Error())
+		}
+		reader2 := test.getObject(ctx, objPath)
+
+		// Get generation after send pubsub message.
+		assert.NotEqual(t, reader1.Attrs.Generation, reader2.Attrs.Generation)
 	})
 }
 
@@ -51,6 +72,26 @@ type TestFetch struct {
 
 func NewTestFetch(t *testing.T) *TestFetch {
 	return &TestFetch{t}
+}
+
+func (f *TestFetch) deleteObjects(ctx context.Context, objPath string) {
+	client, _ := storage.NewClient(ctx)
+	query := storage.Query{Prefix: objPath, Versions: true}
+	bucket := client.Bucket(os.Getenv("BUCKET_NAME"))
+	it := bucket.Objects(ctx, &query)
+	for {
+		objAttrs, err := it.Next()
+		if err != nil && err != iterator.Done {
+			assert.Fail(f.t, err.Error())
+		}
+		if err == iterator.Done {
+			break
+		}
+		if err := bucket.Object(objAttrs.Name).Generation(objAttrs.Generation).Delete(ctx); err != nil {
+			assert.Fail(f.t, err.Error())
+		}
+		zl.Dump(objAttrs)
+	}
 }
 
 func (f *TestFetch) getObject(ctx context.Context, objPath string) *storage.Reader {
