@@ -9,7 +9,7 @@ PROJECT_NUMBER=$(shell gcloud projects list --filter="project_id:$(PROJECT_ID)" 
 FUNC_NAME=fetch
 ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
-BUCKET_NAME=$(PROJECT_ID)-fetch
+BUCKET_NAME=$(PROJECT_ID)-data-fetch
 # VERSION=$(shell git rev-parse --short HEAD)
 VERSION=$(shell git describe --abbrev=0 --tags)
 
