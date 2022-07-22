@@ -9,6 +9,7 @@ import (
 	"net/http"
 	nu "net/url"
 	"os"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -28,12 +29,17 @@ func Run(ctx context.Context, event event.Event) error {
 	defer zl.Sync() // Flush log file buffer. for debug in mac local.
 
 	bucket := getEnv()
-	url := parseEvent(event)
-	gcsPath := parseURL(url)
-	buf := get(url)
-
-	if err := save(ctx, bucket, gcsPath, buf); err != nil {
-		return err
+	urls := parseEvent(event)
+	if urls == nil {
+		return fmt.Errorf("urls is nil")
+	}
+	for i := range urls {
+		gcsPath := parseURL(urls[i])
+		buf := get(urls[i])
+		if err := save(ctx, bucket, gcsPath, buf); err != nil {
+			return err
+		}
+		time.Sleep(time.Second)
 	}
 
 	return nil
@@ -78,20 +84,22 @@ func parseURL(s string) string {
 	return url.Host + url.Path
 }
 
-func parseEvent(event event.Event) string {
+func parseEvent(event event.Event) []string {
 	var data pubsub.MessagePublishedData
 
 	err := json.Unmarshal(event.Data(), &data)
 	if err != nil {
 		zl.Error("UNMARSHAL_ERROR", err)
-		return ""
+		return nil
 	}
 	zl.Info("CLOUD_EVENT_RECEIVED",
 		zap.String("cloudEventContext", event.Context.String()),
 		zap.Any("cloudEventData", data),
 	)
 
-	return string(data.Message.Data)
+	// return string(data.Message.Data)
+	dataStr := strings.TrimSpace(string(data.Message.Data))
+	return strings.Split(dataStr, "\n")
 }
 
 func getEnv() (bucket string) {
@@ -135,6 +143,7 @@ func writeBuf(ctx context.Context, client *storage.Client, bucket, object string
 
 	// writer close
 	fields := []zap.Field{
+		zl.Console(object),
 		zap.String("bucket", bucket),
 		zap.String("object", object),
 	}

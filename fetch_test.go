@@ -10,7 +10,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/googleapis/google-cloudevents-go/cloud/pubsub/v1"
 	fetch "github.com/nkmr-jp/gcf-fetch"
-	"github.com/nkmr-jp/zl"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/iterator"
 )
@@ -40,29 +39,18 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("multi url", func(t *testing.T) {
-		t.Skip()
-		objPath := `
-api.github.com/users/github
-api.github.com/users/github/followers
-`
 		pubsubData := `
 https://api.github.com/users/github
 https://api.github.com/users/github/followers
 `
 		ctx := context.Background()
-
+		test.deleteObjects(ctx, "api.github.com")
 		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
 			assert.Fail(t, err.Error())
 		}
-		reader1 := test.getObject(ctx, objPath)
 
-		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
-			assert.Fail(t, err.Error())
-		}
-		reader2 := test.getObject(ctx, objPath)
-
-		// Get generation after send pubsub message.
-		assert.NotEqual(t, reader1.Attrs.Generation, reader2.Attrs.Generation)
+		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github"), "reader1")
+		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github/followers"), "reader2")
 	})
 }
 
@@ -90,7 +78,6 @@ func (f *TestFetch) deleteObjects(ctx context.Context, objPath string) {
 		if err := bucket.Object(objAttrs.Name).Generation(objAttrs.Generation).Delete(ctx); err != nil {
 			assert.Fail(f.t, err.Error())
 		}
-		zl.Dump(objAttrs)
 	}
 }
 
