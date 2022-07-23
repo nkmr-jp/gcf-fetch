@@ -18,14 +18,24 @@ import (
 	"github.com/googleapis/google-cloudevents-go/cloud/pubsub/v1"
 	"github.com/nkmr-jp/zl"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func init() {
 	initLogger()
-	functions.CloudEvent("Fetch", Run)
+	functions.CloudEvent("Fetch", Fetch)
 }
 
-func Run(ctx context.Context, event event.Event) error {
+type Results []string
+
+func (r Results) MarshalLogArray(enc zapcore.ArrayEncoder) error {
+	for _, u := range r {
+		enc.AppendString(u)
+	}
+	return nil
+}
+
+func Fetch(ctx context.Context, event event.Event) error {
 	defer zl.Sync() // Flush log file buffer. for debug in mac local.
 
 	bucket := getEnv()
@@ -33,14 +43,28 @@ func Run(ctx context.Context, event event.Event) error {
 	if urls == nil {
 		return fmt.Errorf("urls is nil")
 	}
+
+	var success, failure int8
+	var results Results
 	for i := range urls {
-		gcsPath := parseURL(urls[i])
+		object := parseURL(urls[i])
 		buf := get(urls[i])
-		if err := save(ctx, bucket, gcsPath, buf); err != nil {
-			return err
+		if err := save(ctx, bucket, object, buf); err != nil {
+			failure++
+			results = append(results, fmt.Sprintf("failure: %s", object))
+		} else {
+			success++
+			results = append(results, fmt.Sprintf("success: %s", object))
 		}
 		time.Sleep(time.Second)
 	}
+
+	zl.Info(
+		"FETCH_COMPLETE",
+		zl.Console(fmt.Sprintf("success %d. failure %d.", success, failure)),
+		zap.String("bucket", bucket),
+		zap.Array("results", results),
+	)
 
 	return nil
 }
@@ -162,10 +186,16 @@ func initLogger() {
 	zl.SetVersion(version)
 	zl.SetRepositoryCallerEncoder(urlFormat, version, srcRootDir)
 
+	// test
+	if strings.HasSuffix(os.Args[0], ".test") {
+		zl.SetRotateFileName("./log/test.jsonl")
+	}
+	// production
 	if os.Getenv("FUNCTION_TARGET") != "" {
 		zl.SetOutput(zl.ConsoleOutput)
 		zl.SetOmitKeys(zl.PIDKey, zl.HostnameKey)
 	}
 	zl.SetLevel(zl.DebugLevel)
 	zl.Init()
+	zl.Warn("TEST")
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/googleapis/google-cloudevents-go/cloud/pubsub/v1"
 	fetch "github.com/nkmr-jp/gcf-fetch"
+	"github.com/nkmr-jp/zl"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/iterator"
 )
@@ -24,13 +25,13 @@ func TestRun(t *testing.T) {
 		test.deleteObjects(ctx, "api.github.com")
 
 		// Send pubsub message1
-		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
+		if err := fetch.Fetch(ctx, test.event(pubsubData)); err != nil {
 			assert.Fail(t, err.Error())
 		}
 		reader1 := test.getObject(ctx, objPath)
 
 		// Send pubsub message2
-		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
+		if err := fetch.Fetch(ctx, test.event(pubsubData)); err != nil {
 			assert.Fail(t, err.Error())
 		}
 		reader2 := test.getObject(ctx, objPath)
@@ -45,7 +46,7 @@ https://api.github.com/users/github/followers
 `
 		ctx := context.Background()
 		test.deleteObjects(ctx, "api.github.com")
-		if err := fetch.Run(ctx, test.event(pubsubData)); err != nil {
+		if err := fetch.Fetch(ctx, test.event(pubsubData)); err != nil {
 			assert.Fail(t, err.Error())
 		}
 
@@ -59,6 +60,8 @@ type TestFetch struct {
 }
 
 func NewTestFetch(t *testing.T) *TestFetch {
+	zl.SetRotateFileName("./test.jsonl")
+	zl.Init()
 	return &TestFetch{t}
 }
 
