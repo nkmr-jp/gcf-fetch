@@ -44,7 +44,7 @@ func Fetch(ctx context.Context, event event.Event) error {
 		return fmt.Errorf("urls is nil")
 	}
 
-	var success, failure int8
+	var success, failure uint8
 	var results Results
 	for i := range urls {
 		object := parseURL(urls[i])
@@ -63,6 +63,8 @@ func Fetch(ctx context.Context, event event.Event) error {
 		"FETCH_COMPLETE",
 		zl.Console(fmt.Sprintf("success %d. failure %d.", success, failure)),
 		zap.String("bucket", bucket),
+		zap.Uint8("success", success),
+		zap.String("failure", bucket),
 		zap.Array("results", results),
 	)
 
