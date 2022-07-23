@@ -1,5 +1,7 @@
 # .semver.yml
 
+# See: https://github.com/carloscuesta/gitmoji/blob/master/src/data/gitmojis.json
+
 # Release Branches
 branches: [ main ]
 
@@ -8,8 +10,9 @@ branches: [ main ]
 semver:
   #  minor:
   #    - lipstick
-  #  patch:
-  #    - art
+  patch:
+    - loud_sound
+    - mute
   #  none: # gitmoji.json "semver": null is convert to none
   #    - pencil2
   ignore: # not add in release-template.hbs
