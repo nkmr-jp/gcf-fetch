@@ -44,29 +44,31 @@ func Fetch(ctx context.Context, event event.Event) error {
 		return fmt.Errorf("urls is nil")
 	}
 
-	var success, failure uint8
-	var results Results
+	var successes, failures Results
 	for i := range urls {
 		object := parseURL(urls[i])
 		buf := get(urls[i])
 		if err := save(ctx, bucket, object, buf); err != nil {
-			failure++
-			results = append(results, fmt.Sprintf("failure: %s", object))
+			failures = append(failures, object)
 		} else {
-			success++
-			results = append(results, fmt.Sprintf("success: %s", object))
+			successes = append(successes, object)
 		}
 		time.Sleep(time.Second)
 	}
 
-	zl.Info(
-		"FETCH_COMPLETE",
-		zl.Console(fmt.Sprintf("success %d. failure %d.", success, failure)),
+	console := fmt.Sprintf("%d successes. %d failures.", len(successes), len(failures))
+	fields := []zap.Field{
 		zap.String("bucket", bucket),
-		zap.Uint8("success", success),
-		zap.String("failure", bucket),
-		zap.Array("results", results),
-	)
+		zap.Array("successes", successes),
+		zap.Array("failures", failures),
+	}
+	if len(failures) == 0 {
+		zl.Info("FETCH_COMPLETE", append(fields, zl.Console(console))...)
+	} else {
+		err := fmt.Errorf(console)
+		zl.Error("FETCH_COMPLETE_WITH_ERROR", err, fields...)
+		return err
+	}
 
 	return nil
 }
@@ -77,6 +79,11 @@ func get(urlStr string) *bytes.Buffer {
 		return nil
 	}
 	res, err := http.Get(u.String())
+	if res.StatusCode != http.StatusOK {
+		zl.Error("HTTP_GET_ERROR", fmt.Errorf("status code is %d", res.StatusCode))
+		return nil
+	}
+
 	defer func() {
 		if err := res.Body.Close(); err != nil {
 			zl.Error("HTTP_CLOSE_ERROR", err)
@@ -139,6 +146,11 @@ func getEnv() (bucket string) {
 
 // See: https://cloud.google.com/storage/docs/streaming#code-samples
 func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
+	if buf == nil {
+		err := fmt.Errorf("bytes.Buffer is nil")
+		zl.Error("BUFFER_ERROR", err)
+		return err
+	}
 	// create client
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -199,5 +211,4 @@ func initLogger() {
 	}
 	zl.SetLevel(zl.DebugLevel)
 	zl.Init()
-	zl.Warn("TEST")
 }

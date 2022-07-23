@@ -47,7 +47,7 @@ https://api.github.com/users/github/followers
 		ctx := context.Background()
 		test.deleteObjects(ctx, "api.github.com")
 		if err := fetch.Fetch(ctx, test.event(pubsubData)); err != nil {
-			assert.Fail(t, err.Error())
+			assert.FailNow(t, err.Error())
 		}
 
 		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github"), "reader1")
