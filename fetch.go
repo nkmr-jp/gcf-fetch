@@ -73,17 +73,13 @@ func Fetch(ctx context.Context, event event.Event) error {
 	return nil
 }
 
+// nolint:funlen
 func get(urlStr string) *bytes.Buffer {
 	u, err := nu.Parse(urlStr)
 	if err != nil {
 		return nil
 	}
 	res, err := http.Get(u.String())
-	if res.StatusCode != http.StatusOK {
-		zl.Error("HTTP_GET_ERROR", fmt.Errorf("status code is %d", res.StatusCode))
-		return nil
-	}
-
 	defer func() {
 		if err := res.Body.Close(); err != nil {
 			zl.Error("HTTP_CLOSE_ERROR", err)
@@ -91,6 +87,10 @@ func get(urlStr string) *bytes.Buffer {
 	}()
 	if err != nil {
 		zl.Error("HTTP_GET_ERROR", err)
+		return nil
+	}
+	if res.StatusCode != http.StatusOK {
+		zl.Error("HTTP_GET_ERROR", fmt.Errorf("status code is %d", res.StatusCode))
 		return nil
 	}
 
