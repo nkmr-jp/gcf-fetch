@@ -18,14 +18,24 @@ import (
 	"github.com/googleapis/google-cloudevents-go/cloud/pubsub/v1"
 	"github.com/nkmr-jp/zl"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func init() {
 	initLogger()
-	functions.CloudEvent("Fetch", Run)
+	functions.CloudEvent("Fetch", Fetch)
 }
 
-func Run(ctx context.Context, event event.Event) error {
+type Results []string
+
+func (r Results) MarshalLogArray(enc zapcore.ArrayEncoder) error {
+	for _, u := range r {
+		enc.AppendString(u)
+	}
+	return nil
+}
+
+func Fetch(ctx context.Context, event event.Event) error {
 	defer zl.Sync() // Flush log file buffer. for debug in mac local.
 
 	bucket := getEnv()
@@ -33,18 +43,37 @@ func Run(ctx context.Context, event event.Event) error {
 	if urls == nil {
 		return fmt.Errorf("urls is nil")
 	}
+
+	var successes, failures Results
 	for i := range urls {
-		gcsPath := parseURL(urls[i])
+		object := parseURL(urls[i])
 		buf := get(urls[i])
-		if err := save(ctx, bucket, gcsPath, buf); err != nil {
-			return err
+		if err := save(ctx, bucket, object, buf); err != nil {
+			failures = append(failures, object)
+		} else {
+			successes = append(successes, object)
 		}
 		time.Sleep(time.Second)
+	}
+
+	console := fmt.Sprintf("%d successes. %d failures.", len(successes), len(failures))
+	fields := []zap.Field{
+		zap.String("bucket", bucket),
+		zap.Array("successes", successes),
+		zap.Array("failures", failures),
+	}
+	if len(failures) == 0 {
+		zl.Info("FETCH_COMPLETE", append(fields, zl.Console(console))...)
+	} else {
+		err := fmt.Errorf(console)
+		zl.Error("FETCH_COMPLETE_WITH_ERROR", err, fields...)
+		return err
 	}
 
 	return nil
 }
 
+// nolint:funlen
 func get(urlStr string) *bytes.Buffer {
 	u, err := nu.Parse(urlStr)
 	if err != nil {
@@ -58,6 +87,10 @@ func get(urlStr string) *bytes.Buffer {
 	}()
 	if err != nil {
 		zl.Error("HTTP_GET_ERROR", err)
+		return nil
+	}
+	if res.StatusCode != http.StatusOK {
+		zl.Error("HTTP_GET_ERROR", fmt.Errorf("status code is %d", res.StatusCode))
 		return nil
 	}
 
@@ -113,6 +146,11 @@ func getEnv() (bucket string) {
 
 // See: https://cloud.google.com/storage/docs/streaming#code-samples
 func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
+	if buf == nil {
+		err := fmt.Errorf("bytes.Buffer is nil")
+		zl.Error("BUFFER_ERROR", err)
+		return err
+	}
 	// create client
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -162,6 +200,11 @@ func initLogger() {
 	zl.SetVersion(version)
 	zl.SetRepositoryCallerEncoder(urlFormat, version, srcRootDir)
 
+	// test
+	if strings.HasSuffix(os.Args[0], ".test") {
+		zl.SetRotateFileName("./log/test.jsonl")
+	}
+	// production
 	if os.Getenv("FUNCTION_TARGET") != "" {
 		zl.SetOutput(zl.ConsoleOutput)
 		zl.SetOmitKeys(zl.PIDKey, zl.HostnameKey)
