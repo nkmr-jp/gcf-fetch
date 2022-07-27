@@ -3,7 +3,9 @@ package fetch_test
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/storage"
@@ -68,19 +70,26 @@ https://api.github.com/users/github/followers
 }
 
 type TestFetch struct {
-	t *testing.T
+	t          *testing.T
+	bucketName string
 }
 
 func NewTestFetch(t *testing.T) *TestFetch {
 	zl.SetRotateFileName("./test.jsonl")
 	zl.Init()
-	return &TestFetch{t}
+
+	bucketName := os.Getenv("BUCKET_NAME")
+	if !strings.HasSuffix(bucketName, "-test") {
+		assert.FailNow(t, fmt.Sprintf("%s bucket is not to test", bucketName))
+	}
+
+	return &TestFetch{t, bucketName}
 }
 
 func (f *TestFetch) deleteObjects(ctx context.Context, objPath string) {
 	client, _ := storage.NewClient(ctx)
 	query := storage.Query{Prefix: objPath, Versions: true}
-	bucket := client.Bucket(os.Getenv("BUCKET_NAME"))
+	bucket := client.Bucket(f.bucketName)
 	it := bucket.Objects(ctx, &query)
 	for {
 		objAttrs, err := it.Next()
@@ -98,7 +107,7 @@ func (f *TestFetch) deleteObjects(ctx context.Context, objPath string) {
 
 func (f *TestFetch) getObject(ctx context.Context, objPath string) *storage.Reader {
 	client, _ := storage.NewClient(ctx)
-	reader, err := client.Bucket(os.Getenv("BUCKET_NAME")).Object(objPath).NewReader(ctx)
+	reader, err := client.Bucket(f.bucketName).Object(objPath).NewReader(ctx)
 	defer func(rc *storage.Reader) {
 		err := rc.Close()
 		if err != nil {
