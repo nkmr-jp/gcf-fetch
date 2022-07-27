@@ -53,6 +53,18 @@ https://api.github.com/users/github/followers
 		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github"), "reader1")
 		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github/followers"), "reader2")
 	})
+
+	t.Run("multi url 2", func(t *testing.T) {
+		pubsubData := `https://api.github.com/users/github https://api.github.com/users/github/followers`
+		ctx := context.Background()
+		test.deleteObjects(ctx, "api.github.com")
+		if err := fetch.Fetch(ctx, test.event(pubsubData)); err != nil {
+			assert.FailNow(t, err.Error())
+		}
+
+		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github"), "reader1")
+		assert.NotNilf(t, test.getObject(ctx, "api.github.com/users/github/followers"), "reader2")
+	})
 }
 
 type TestFetch struct {

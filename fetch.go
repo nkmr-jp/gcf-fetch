@@ -132,7 +132,8 @@ func parseEvent(event event.Event) []string {
 
 	// return string(data.Message.Data)
 	dataStr := strings.TrimSpace(string(data.Message.Data))
-	return strings.Split(dataStr, "\n")
+	dataStr = strings.ReplaceAll(dataStr, "\n", " ")
+	return strings.Split(dataStr, " ")
 }
 
 func getEnv() (bucket string) {
