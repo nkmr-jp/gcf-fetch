@@ -203,10 +203,8 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 h1:Esafd1046DLD
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
-github.com/nkmr-jp/zl v1.0.0 h1:/oCDG755XTeGGrb1Z1TkrPMAK+fcuoFSMtH3PaA2D3k=
-github.com/nkmr-jp/zl v1.0.0/go.mod h1:mjw/2Bv0QSfcf1X8+/g7uw0lHyaAQTKLETR6bTDdHGc=
-github.com/nkmr-jp/zl v1.0.1 h1:+lREAcrw5su84xmJ/NnxMW4EE2DFexelH8ksUoQjBo0=
-github.com/nkmr-jp/zl v1.0.1/go.mod h1:mjw/2Bv0QSfcf1X8+/g7uw0lHyaAQTKLETR6bTDdHGc=
+github.com/nkmr-jp/zl v1.1.0 h1:HPqUyZU6KZHCw6dhtW3VPIiCXEz/FWlcxcRRppOkPuI=
+github.com/nkmr-jp/zl v1.1.0/go.mod h1:mjw/2Bv0QSfcf1X8+/g7uw0lHyaAQTKLETR6bTDdHGc=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

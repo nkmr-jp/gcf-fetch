@@ -66,7 +66,7 @@ func Fetch(ctx context.Context, event event.Event) error {
 		zl.Info("FETCH_COMPLETE", append(fields, zl.Console(console))...)
 	} else {
 		err := fmt.Errorf(console)
-		zl.Error("FETCH_COMPLETE_WITH_ERROR", err, fields...)
+		zl.Err("FETCH_COMPLETE_WITH_ERROR", err, fields...)
 		return err
 	}
 
@@ -82,27 +82,27 @@ func get(urlStr string) *bytes.Buffer {
 	res, err := http.Get(u.String())
 	defer func() {
 		if err := res.Body.Close(); err != nil {
-			zl.Error("HTTP_CLOSE_ERROR", err)
+			zl.Err("HTTP_CLOSE_ERROR", err)
 		}
 	}()
 	if err != nil {
-		zl.Error("HTTP_GET_ERROR", err)
+		zl.Err("HTTP_GET_ERROR", err)
 		return nil
 	}
 	if res.StatusCode != http.StatusOK {
-		zl.Error("HTTP_GET_ERROR", fmt.Errorf("status code is %d", res.StatusCode))
+		zl.Err("HTTP_GET_ERROR", fmt.Errorf("status code is %d", res.StatusCode))
 		return nil
 	}
 
 	ret, err := io.ReadAll(res.Body)
 	if err != nil {
-		zl.Error("READ_BODY_ERROR", err)
+		zl.Err("READ_BODY_ERROR", err)
 		return nil
 	}
 
 	var buf bytes.Buffer
 	if err := json.Indent(&buf, ret, "", "  "); err != nil {
-		zl.Error("INDENT_ERROR", err)
+		zl.Err("INDENT_ERROR", err)
 		return nil
 	}
 
@@ -112,7 +112,7 @@ func get(urlStr string) *bytes.Buffer {
 func parseURL(s string) string {
 	url, err := nu.Parse(s)
 	if err != nil {
-		zl.Error("URL_PARSE_ERROR", err)
+		zl.Err("URL_PARSE_ERROR", err)
 	}
 	return url.Host + url.Path
 }
@@ -122,7 +122,7 @@ func parseEvent(event event.Event) []string {
 
 	err := json.Unmarshal(event.Data(), &data)
 	if err != nil {
-		zl.Error("UNMARSHAL_ERROR", err)
+		zl.Err("UNMARSHAL_ERROR", err)
 		return nil
 	}
 	zl.Info("CLOUD_EVENT_RECEIVED",
@@ -139,7 +139,7 @@ func parseEvent(event event.Event) []string {
 func getEnv() (bucket string) {
 	bucket = os.Getenv("BUCKET_NAME")
 	if bucket == "" {
-		zl.Error("GETENV_ERROR", fmt.Errorf("bucket is empty"))
+		zl.Err("GETENV_ERROR", fmt.Errorf("bucket is empty"))
 		return ""
 	}
 	return bucket
@@ -149,19 +149,19 @@ func getEnv() (bucket string) {
 func save(ctx context.Context, bucket, object string, buf *bytes.Buffer) error {
 	if buf == nil {
 		err := fmt.Errorf("bytes.Buffer is nil")
-		zl.Error("BUFFER_ERROR", err)
+		zl.Err("BUFFER_ERROR", err)
 		return err
 	}
 	// create client
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		zl.Error("NEW_CLIENT_ERROR", err)
+		zl.Err("NEW_CLIENT_ERROR", err)
 		return err
 	}
 	defer func(client *storage.Client) {
 		err := client.Close()
 		if err != nil {
-			zl.Error("CLIENT_CLOSE_ERROR", err)
+			zl.Err("CLIENT_CLOSE_ERROR", err)
 		}
 	}(client)
 
@@ -176,7 +176,7 @@ func writeBuf(ctx context.Context, client *storage.Client, bucket, object string
 	writer := client.Bucket(bucket).Object(object).NewWriter(ctx)
 	writer.ChunkSize = 0
 	if _, err := io.Copy(writer, buf); err != nil {
-		zl.Error("IO_COPY_ERROR", err)
+		zl.Err("IO_COPY_ERROR", err)
 		return err
 	}
 
@@ -187,7 +187,7 @@ func writeBuf(ctx context.Context, client *storage.Client, bucket, object string
 		zap.String("object", object),
 	}
 	if err := writer.Close(); err != nil {
-		zl.Error("WRITER_CLOSE_ERROR", err, fields...)
+		zl.Err("WRITER_CLOSE_ERROR", err, fields...)
 		return err
 	}
 	zl.Debug("SAVED", fields...)
