@@ -1,5 +1,5 @@
 # See:
-# https://cloud.google.com/functions/docs/2nd-gen/getting-started#pubsub
+# https://cloud.google.com/functions/docs/tutorials/pubsub
 # https://cloud.google.com/storage/docs/lifecycle-configurations#delete-objects-json
 
 REGION=asia-northeast1
@@ -9,7 +9,7 @@ PROJECT_NUMBER=$(shell gcloud projects list --filter="project_id:$(PROJECT_ID)" 
 FUNC_NAME=fetch
 ENTRY_POINT=Fetch
 TOPIC_NAME=$(FUNC_NAME)-topic
-BUCKET_NAME=$(PROJECT_ID)-data-fetch
+BUCKET_NAME=$(PROJECT_ID)-$(FUNC_NAME)
 # VERSION=$(shell git rev-parse --short HEAD)
 VERSION=$(shell git describe --abbrev=0 --tags)
 
@@ -29,7 +29,6 @@ init:
 	-gsutil lifecycle set ./lifecycle.json gs://$(BUCKET_NAME)-test
 	@echo
 	@echo "---- check resources in google cloud console. ----"
-	open https://console.cloud.google.com/iam-admin/serviceaccounts?project=$(PROJECT_ID)
 	open https://console.cloud.google.com/cloudpubsub/topic/detail/$(FUNC_NAME)-topic
 	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
 
@@ -50,16 +49,17 @@ test:
 	export BUCKET_NAME=$(BUCKET_NAME)-test && go test -v
 
 deploy:
-	gcloud beta functions deploy $(FUNC_NAME) \
+	gcloud functions deploy $(FUNC_NAME) \
 	--gen2 \
-	--runtime go116 \
-	--trigger-topic $(FUNC_NAME)-topic \
-	--entry-point $(ENTRY_POINT) \
+	--runtime=go116 \
+	--region=$(REGION) \
+	--trigger-topic=$(FUNC_NAME)-topic \
+	--entry-point=$(ENTRY_POINT) \
 	--set-env-vars BUCKET_NAME=$(BUCKET_NAME),VERSION=$(VERSION) \
-	--source .
+	--source=.
 
 show:
-	gcloud beta functions describe $(FUNC_NAME) --gen2
+	gcloud functions describe $(FUNC_NAME) --gen2
 
 URL=""
 send:
@@ -72,7 +72,7 @@ endif
 	--message=$(URL)
 
 log:
-	gcloud beta functions logs read $(FUNC_NAME) --gen2 --limit=100
+	gcloud functions logs read $(FUNC_NAME) --gen2 --limit=100
 
 open:
 	open https://console.cloud.google.com/storage/browser?project=$(PROJECT_ID)
