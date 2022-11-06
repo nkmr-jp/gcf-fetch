@@ -10,8 +10,6 @@ Cloud Functions that fetch data from public APIs and store it in Google Cloud St
 
 - Fetch data is stored in a path based on the API's URL. ( like [ghq](https://github.com/x-motemen/ghq) )
   - Therefore, even if you get various API data, you do not need to manage the bucket's path.
-- Execute Cloud Pub/Sub as a trigger.
-  - Therefore, periodic execution is also possible with [Cloud Scheduler](https://cloud.google.com/scheduler).
 - Fetch data is managed by [Object Versioning](https://cloud.google.com/storage/docs/object-versioning).
 - GCS [price](https://cloud.google.com/storage/pricing) are optimized by [Object Lifecycle Management](https://cloud.google.com/storage/docs/lifecycle).
   - The storage class is set to change from Standard to Coldline after 7 days from object creation and from Coldline to Archive after 30 days (easy to change).
