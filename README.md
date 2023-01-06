@@ -67,7 +67,7 @@ Cloud Functions that fetch data from public APIs and store it in Google Cloud St
 
 If you haven't already, install and set up the [Cloud SDK](https://cloud.google.com/sdk/docs/install-sdk).
 
-# Usage
+# Quick Start
 
 Create GCP resources
 ```sh
@@ -94,10 +94,12 @@ Open resources in console
 make open
 ```
 
-# Use Case
+# Usage Example
 
-The api data saved in GCS can be used for various purposes such as data analysis and machine learning by loading it into BigQuery.<br>
-Of course, it can also be used in applications.
+The api data saved in GCS can be used for various purposes such as data analysis and machine learning by loading it into BigQuery. Of course, it can also be used in applications.
+
+You can also run gcf-fetch periodically to collect data such as public APIs. Public APIs can be found, for example, in the Repository below.
+
 
 List of public APIs.<br>
 [GitHub - public-apis/public-apis: A collective list of free APIs](https://github.com/public-apis/public-apis)
