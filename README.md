@@ -2,7 +2,7 @@
 
 Cloud Functions that fetch data from public APIs and store it in Google Cloud Storage.
 
-- Runtime: Go 1.16
+- Runtime: Go 1.20
 - Gen: [Cloud Functions (2nd gen)](https://cloud.google.com/functions/docs/2nd-gen/overview)
 
 

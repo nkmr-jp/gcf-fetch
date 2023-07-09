@@ -51,7 +51,7 @@ test:
 deploy:
 	gcloud functions deploy $(FUNC_NAME) \
 	--gen2 \
-	--runtime=go116 \
+	--runtime=go120 \
 	--region=$(REGION) \
 	--trigger-topic=$(FUNC_NAME)-topic \
 	--entry-point=$(ENTRY_POINT) \
